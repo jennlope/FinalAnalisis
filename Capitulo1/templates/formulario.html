@@ -2,34 +2,19 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Métodos Numéricos - Capítulo 1</title>
+    <title>Métodos Numéricos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 <div class="container mt-5">
-    <h1 class="text-center mb-4">Métodos Numéricos - Capítulo 1</h1>
+    <h1 class="text-center mb-4">Capítulo 1: Métodos Numéricos</h1>
     <form method="post">
         {% csrf_token %}
-        <div class="row mb-3">
-            <div class="col"><label>X₀:</label><input type="text" name="x0" class="form-control"></div>
-            <div class="col"><label>Tolerancia:</label><input type="text" name="tolerancia" class="form-control"></div>
-            <div class="col"><label>Niter:</label><input type="number" name="niter" class="form-control"></div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col"><label>F(x):</label><input type="text" name="fx" class="form-control"></div>
-            <div class="col"><label>g(x):</label><input type="text" name="gx" class="form-control"></div>
-            <div class="col"><label>F'(x):</label><input type="text" name="dfx" class="form-control"></div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col"><label>a:</label><input type="text" name="a" class="form-control"></div>
-            <div class="col"><label>b:</label><input type="text" name="b" class="form-control"></div>
-        </div>
 
         <div class="mb-3">
-            <label>Seleccione el método:</label>
-            <select name="metodo" class="form-select">
+            <label for="metodo" class="form-label">Seleccione el método:</label>
+            <select class="form-select" name="metodo" required>
+                <option value="">-- Seleccione --</option>
                 <option value="biseccion">Bisección</option>
                 <option value="puntofijo">Punto Fijo</option>
                 <option value="reglafalsa">Regla Falsa</option>
@@ -39,7 +24,54 @@
             </select>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">Resolver</button>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label>X₀:</label>
+                <input type="text" name="x0" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Niter:</label>
+                <input type="number" name="niter" class="form-control">
+            </div>
+            <div class="col-md-4 mb-3">
+                <label>Tolerancia:</label>
+                <input type="text" name="tolerancia" class="form-control">
+            </div>
+        </div>
+
+        <hr>
+        <h5>Intervalo [a, b] (usado en Bisección, Regla Falsa, Secante):</h5>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label>a:</label>
+                <input type="text" name="a" class="form-control">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label>b:</label>
+                <input type="text" name="b" class="form-control">
+            </div>
+        </div>
+
+        <hr>
+        <h5>Funciones</h5>
+        <div class="mb-3">
+            <label>F(x):</label>
+            <input type="text" name="fx" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>g(x): (Solo para Punto Fijo)</label>
+            <input type="text" name="gx" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>F'(x): (Solo para Newton y Raíces Múltiples)</label>
+            <input type="text" name="dfx" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label>F''(x): (Solo para Raíces Múltiples)</label>
+            <input type="text" name="ddfx" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 mt-3">Calcular</button>
     </form>
 </div>
 </body>
