@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Métodos Numéricos - Capítulo 1</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Métodos Numéricos - Capítulo 1</h1>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row mb-3">
+            <div class="col"><label>X₀:</label><input type="text" name="x0" class="form-control"></div>
+            <div class="col"><label>Tolerancia:</label><input type="text" name="tolerancia" class="form-control"></div>
+            <div class="col"><label>Niter:</label><input type="number" name="niter" class="form-control"></div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col"><label>F(x):</label><input type="text" name="fx" class="form-control"></div>
+            <div class="col"><label>g(x):</label><input type="text" name="gx" class="form-control"></div>
+            <div class="col"><label>F'(x):</label><input type="text" name="dfx" class="form-control"></div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col"><label>a:</label><input type="text" name="a" class="form-control"></div>
+            <div class="col"><label>b:</label><input type="text" name="b" class="form-control"></div>
+        </div>
+
+        <div class="mb-3">
+            <label>Seleccione el método:</label>
+            <select name="metodo" class="form-select">
+                <option value="biseccion">Bisección</option>
+                <option value="puntofijo">Punto Fijo</option>
+                <option value="reglafalsa">Regla Falsa</option>
+                <option value="secante">Secante</option>
+                <option value="newton">Newton</option>
+                <option value="multiples">Raíces Múltiples</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Resolver</button>
+    </form>
+</div>
+</body>
+</html>
