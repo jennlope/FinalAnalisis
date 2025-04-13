@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class FinalanalisisConfig(AppConfig):
+class Capitulo1Config(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "FinalAnalisis"
+    name = "Capitulo1"
