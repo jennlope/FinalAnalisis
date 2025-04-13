@@ -38,6 +38,11 @@
                 </tbody>
             </table>
         </div>
+
+        {% if grafica %}
+            <h4 class="mt-4">Gráfica de la función f(x):</h4>
+            <img src="data:image/png;base64,{{ grafica }}" class="img-fluid border" alt="Gráfica de f(x)">
+        {% endif %}
     {% endif %}
 
     <div class="text-center mt-4">
