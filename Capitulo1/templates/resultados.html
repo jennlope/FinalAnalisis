@@ -16,28 +16,29 @@
     {% endif %}
 
     {% if resultado.resultados %}
-        <div class="table-responsive mt-4">
-            <h4>Iteraciones realizadas:</h4>
-            <table class="table table-bordered table-striped table-hover">
-                <thead class="table-dark">
+    <div class="table-responsive mt-4">
+        <h4>Iteraciones realizadas:</h4>
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    {% for key in resultado.resultados.0.keys %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for fila in resultado.resultados %}
                     <tr>
-                        {% for key in resultado.resultados.0.keys %}
-                            <th>{{ key }}</th>
+                        {% for valor in fila.values %}
+                            <td>{{ valor }}</td>
                         {% endfor %}
                     </tr>
-                </thead>
-                <tbody>
-                    {% for fila in resultado.resultados %}
-                        <tr>
-                            {% for valor in fila.values %}
-                                <td>{{ valor }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% endif %}
+    
 
     {% if grafica %}
         <h4 class="mt-4">Gráfica de la función f(x):</h4>
