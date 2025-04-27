@@ -4,7 +4,7 @@ import io
 import urllib, base64
 import matplotlib.pyplot as plt
 import numpy as np
-import math 
+import math
 
 def generar_grafica(funcion_str, a=-10, b=10, raiz_aproximada=None):
     x = np.linspace(float(a), float(b), 400)
@@ -40,6 +40,21 @@ def generar_grafica(funcion_str, a=-10, b=10, raiz_aproximada=None):
     plt.close()
     return grafica
 
+def verificar_datos(metodo, datos):
+    requeridos = {
+        "biseccion": ["fx", "a", "b", "tol", "niter"],
+        "puntofijo": ["gx", "x0", "tol", "niter"],
+        "reglafalsa": ["fx", "a", "b", "tol", "niter"],
+        "secante": ["fx", "x0", "x1", "tol", "niter"],
+        "newton": ["fx", "dfx", "x0", "tol", "niter"],
+        "multiples": ["fx", "dfx", "ddfx", "x0", "tol", "niter"],
+    }
+    faltantes = []
+    for campo in requeridos.get(metodo, []):
+        if datos.get(campo) is None:
+            faltantes.append(campo)
+    return faltantes
+
 def capitulo1_view(request):
     datos = {}
     resultado = None
@@ -48,34 +63,43 @@ def capitulo1_view(request):
     if request.method == "POST":
         metodo = request.POST.get("metodo")
         datos = {
-            "x0": request.POST.get("x0"),
-            "tol": request.POST.get("tolerancia"),
-            "fx": request.POST.get("fx"),
-            "gx": request.POST.get("gx"),
-            "dfx": request.POST.get("dfx"),
-            "niter": request.POST.get("niter"),
-            "a": request.POST.get("a"),
-            "b": request.POST.get("b"),
+            "x0": request.POST.get("x0") or None,
+            "tol": request.POST.get("tolerancia") or None,
+            "x1": request.POST.get("x1") or None,
+            "fx": request.POST.get("fx") or None,
+            "gx": request.POST.get("gx") or None,
+            "dfx": request.POST.get("dfx") or None,
+            "niter": request.POST.get("niter") or None,
+            "a": request.POST.get("a") or None,
+            "b": request.POST.get("b") or None,
+            "ddfx": request.POST.get("ddfx") or None,
             "metodo": metodo,
         }
 
         try:
-            if metodo == "biseccion":
-                resultado = biseccion(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
-            elif metodo == "puntofijo":
-                resultado = punto_fijo(datos["gx"], datos["x0"], datos["tol"], datos["niter"])
-            elif metodo == "reglafalsa":
-                resultado = regla_falsa(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
-            elif metodo == "secante":
-                resultado = secante(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
-            elif metodo == "newton":
-                resultado = newton(datos["fx"], datos["dfx"], datos["x0"], datos["tol"], datos["niter"])
-            elif metodo == "multiples":
-                ddfx = request.POST.get("ddfx")
-                resultado = raices_multiples(datos["fx"], datos["dfx"], ddfx, datos["x0"], datos["tol"], datos["niter"])
+            faltantes = verificar_datos(metodo, datos)
+            if faltantes:
+                resultado = {"error": f"Faltan los siguientes datos: {', '.join(faltantes)}"}
+            else:
+                if metodo == "biseccion":
+                    resultado = biseccion(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
+                elif metodo == "puntofijo":
+                    resultado = punto_fijo(datos["gx"], datos["x0"], datos["tol"], datos["niter"])
+                elif metodo == "reglafalsa":
+                    resultado = regla_falsa(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
+                elif metodo == "secante":
+                    resultado = secante(datos["fx"], datos["x0"], datos["x1"], datos["tol"], datos["niter"])
+                elif metodo == "newton":
+                    resultado = newton(datos["fx"], datos["dfx"], datos["x0"], datos["tol"], datos["niter"])
+                elif metodo == "multiples":
+                    ddfx = request.POST.get("ddfx")
+                    resultado = raices_multiples(datos["fx"], datos["dfx"], ddfx, datos["x0"], datos["tol"], datos["niter"])
 
-            if datos.get("fx") and resultado and "raiz" in resultado:
-                grafica = generar_grafica(datos["fx"], datos.get("a", -10), datos.get("b", 10), resultado["raiz"])
+
+                if datos.get("fx") and resultado and "raiz" in resultado:
+                    a = datos.get("a") if datos.get("a") is not None else -10
+                    b = datos.get("b") if datos.get("b") is not None else 10
+                    grafica = generar_grafica(datos["fx"], a, b, resultado["raiz"])
 
         except Exception as e:
             resultado = {"error": f"Error durante el cálculo: {str(e)}"}

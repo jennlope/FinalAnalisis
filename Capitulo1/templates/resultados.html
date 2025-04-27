@@ -13,12 +13,11 @@
         <div class="alert alert-danger">
             {{ resultado.error }}
         </div>
-    {% else %}
-        <div class="alert alert-success">
-            <strong>Raíz aproximada encontrada:</strong> {{ resultado.raiz }}
-        </div>
+    {% endif %}
 
-        <div class="table-responsive">
+    {% if resultado.resultados %}
+        <div class="table-responsive mt-4">
+            <h4>Iteraciones realizadas:</h4>
             <table class="table table-bordered table-striped table-hover">
                 <thead class="table-dark">
                     <tr>
@@ -38,11 +37,11 @@
                 </tbody>
             </table>
         </div>
+    {% endif %}
 
-        {% if grafica %}
-            <h4 class="mt-4">Gráfica de la función f(x):</h4>
-            <img src="data:image/png;base64,{{ grafica }}" class="img-fluid border" alt="Gráfica de f(x)">
-        {% endif %}
+    {% if grafica %}
+        <h4 class="mt-4">Gráfica de la función f(x):</h4>
+        <img src="data:image/png;base64,{{ grafica }}" class="img-fluid border" alt="Gráfica de f(x)">
     {% endif %}
 
     <div class="text-center mt-4">

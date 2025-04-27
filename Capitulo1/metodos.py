@@ -87,20 +87,65 @@ def newton(fx_str, dfx_str, x0, tol, niter):
         x0 = x1
     return {"resultados": resultados, "raiz": x1}
 
-def raices_multiples(fx_str, dfx_str, ddfx_str, x0, tol, niter):
+def raices_multiples(fx_str, dfx_str, ddfx_str, x0, tol, niter, conoce_multiplicidad=False, multiplicidad=1):
+    """
+    Método de raíces múltiples adaptado para Django.
+    Parámetros:
+        fx_str: str -> expresión de la función f(x)
+        dfx_str: str -> expresión de la primera derivada f'(x)
+        ddfx_str: str -> expresión de la segunda derivada f''(x)
+        x0: float -> valor inicial
+        tol: float -> tolerancia
+        niter: int -> número máximo de iteraciones
+        conoce_multiplicidad: bool -> indica si el usuario conoce la multiplicidad
+        multiplicidad: int -> valor de la multiplicidad (si se conoce)
+    """
     x0, tol, niter = float(x0), float(tol), int(niter)
     resultados = []
-    for i in range(niter):
-        f = f_expr(fx_str, x0)
-        df = f_expr(dfx_str, x0)
-        ddf = f_expr(ddfx_str, x0)
-        denom = df ** 2 - f * ddf
-        if denom == 0:
-            return {"error": "Denominador cero, no se puede continuar"}
-        x1 = x0 - (f * df) / denom
-        err = abs(x1 - x0)
-        resultados.append({"iter": i+1, "x0": x0, "x1": x1, "error": err})
-        if err < tol:
+    iteracion = 0
+    error = 100  # Error inicial grande
+    
+    while error > tol and iteracion < niter:
+        x = x0
+        fx = f_expr(fx_str, x)
+        fpx = f_expr(dfx_str, x)
+        fppx = f_expr(ddfx_str, x) if not conoce_multiplicidad else None  # Solo si no se conoce m
+
+        # Determinamos Xn+1 según el método elegido
+        if conoce_multiplicidad:
+            if fpx == 0:
+                return {"error": "Derivada primera cero, no se puede continuar"}
+            x1 = x0 - multiplicidad * (fx / fpx)  # Método con multiplicidad conocida
+        else:
+            denom = (fpx ** 2) - (fx * fppx)
+            if abs(denom) < 1e-12:
+                return {"resultados": resultados, "error": "Denominador muy pequeño, no se puede continuar"}
+
+            x1 = x0 - (fx * fpx) / denom  # Método normal de raíces múltiples
+
+        # Calculamos el error
+        error = abs(x1 - x0)
+
+        # Guardamos la iteración
+        resultados.append({
+            "iter": iteracion + 1,
+            "x0": x0,
+            "x1": x1,
+            "f(x0)": fx,
+            "f'(x0)": fpx,
+            "error": error
+        })
+
+        # Verificamos convergencia
+        if abs(fx) < tol:
             break
+
+        # Preparar para la siguiente iteración
         x0 = x1
-    return {"resultados": resultados, "raiz": x1}
+        iteracion += 1
+
+    # Verificar si terminó bien
+    if error < tol:
+        return {"resultados": resultados, "raiz": x1}
+    else:
+        return {"resultados": resultados, "error": "El método no logró converger dentro del número máximo de iteraciones."}
