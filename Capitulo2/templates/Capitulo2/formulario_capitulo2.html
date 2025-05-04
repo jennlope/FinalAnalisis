@@ -1,0 +1,274 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métodos Iterativos - Capítulo 2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .matrix-input {
+            width: 100%;
+            text-align: center;
+        }
+        .vector-input {
+            display: inline-block;
+            width: 80px;
+            margin-right: 10px;
+        }
+        .instruction-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+        }
+        .method-card {
+            transition: all 0.3s ease;
+        }
+        .method-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h1 class="text-center mb-0">
+                    <i class="bi bi-calculator"></i> Métodos Iterativos - Capítulo 2
+                </h1>
+            </div>
+            
+            <div class="card-body">
+                <!-- Tarjeta de Instrucciones -->
+                <div class="card instruction-card mb-4 border-0">
+                    <div class="card-body">
+                        <h4><i class="bi bi-info-circle-fill text-primary"></i> Instrucciones:</h4>
+                        <ol class="mb-0">
+                            <li>Seleccione el tamaño de la matriz (entre 2x2 y 7x7)</li>
+                            <li>Complete todos los valores de la matriz <strong>A</strong> y vector <strong>b</strong></li>
+                            <li>Configure los parámetros numéricos</li>
+                            <li>Seleccione los métodos a aplicar</li>
+                        </ol>
+                    </div>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <strong>Error:</strong> {{ error }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'calcular_resultados' %}" class="needs-validation" novalidate></form>
+                    {% csrf_token %}
+
+                    <!-- Sección 1: Tamaño de Matriz -->
+                    <div class="card method-card mb-4">
+                        <div class="card-header bg-secondary text-white">
+                            <h5 class="mb-0">1. Configuración del Sistema</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Tamaño de la matriz (n×n):</label>
+                                    <input type="number" id="matrixSize" name="matrixSize" 
+                                           class="form-control" min="2" max="7" value="3" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button type="button" class="btn btn-outline-primary mt-4" onclick="updateMatrixInputs()">
+                                        <i class="bi bi-arrow-clockwise"></i> Generar Campos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 2: Matriz A -->
+                    <div class="card method-card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">2. Matriz de Coeficientes (A)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="matrixAInputs" class="matrix-grid">
+                                <!-- Campos generados dinámicamente por JavaScript -->
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-lightbulb"></i> Ingrese los coeficientes del sistema lineal Ax = b
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 3: Vector b -->
+                    <div class="card method-card mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">3. Vector de Términos Independientes (b)</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="vectorBInputs" class="d-flex flex-wrap">
+                                <!-- Campos generados dinámicamente por JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 4: Parámetros Numéricos -->
+                    <div class="card method-card mb-4">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">4. Parámetros Numéricos</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Tolerancia:</label>
+                                    <input type="text" name="tolerancia" class="form-control" 
+                                           value="1e-6" required>
+                                    <div class="form-text">Ej: 1e-6, 0.000001</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Máximo de Iteraciones:</label>
+                                    <input type="number" name="niter" class="form-control" 
+                                           min="1" value="50" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Parámetro ω (para SOR):</label>
+                                    <input type="number" name="omega" class="form-control" 
+                                           step="0.01" min="0.01" max="1.99" value="1.5" required>
+                                    <div class="form-text">Entre 0 y 2 (1 = Gauss-Seidel)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 5: Selección de Métodos -->
+                    <div class="card method-card mb-4">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">5. Métodos a Utilizar</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="metodos" 
+                                               value="jacobi" id="jacobi" checked>
+                                        <label class="form-check-label" for="jacobi">
+                                            <i class="bi bi-1-circle"></i> Método de Jacobi
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="metodos" 
+                                               value="gauss_seidel" id="gauss_seidel" checked>
+                                        <label class="form-check-label" for="gauss_seidel">
+                                            <i class="bi bi-2-circle"></i> Gauss-Seidel
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="metodos" 
+                                               value="sor" id="sor" checked>
+                                        <label class="form-check-label" for="sor">
+                                            <i class="bi bi-3-circle"></i> SOR (Relajación)
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección 6: Reporte -->
+                    <div class="card method-card mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0">6. Opciones de Reporte</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="generar_informe" 
+                                       id="generar_informe" checked>
+                                <label class="form-check-label" for="generar_informe">
+                                    Generar informe comparativo automático
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Envío -->
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary btn-lg" type="submit">
+                            <i class="bi bi-calculator-fill"></i> Calcular Solución
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Función para generar los campos de matriz y vector
+        function updateMatrixInputs() {
+            const size = parseInt(document.getElementById('matrixSize').value);
+            const matrixDiv = document.getElementById('matrixAInputs');
+            const vectorDiv = document.getElementById('vectorBInputs');
+            
+            // Validar tamaño
+            if (size < 2 || size > 7) {
+                alert('El tamaño debe estar entre 2 y 7');
+                return;
+            }
+            
+            // Generar matriz A
+            matrixDiv.innerHTML = '';
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.name = `A_${i}_${j}`;
+                    input.className = 'matrix-input form-control';
+                    input.placeholder = `a${i+1}${j+1}`;
+                    input.step = 'any';
+                    input.required = true;
+                    matrixDiv.appendChild(input);
+                }
+            }
+            
+            // Generar vector b
+            vectorDiv.innerHTML = '';
+            for (let i = 0; i < size; i++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.name = `b_${i}`;
+                input.className = 'vector-input form-control';
+                input.placeholder = `b${i+1}`;
+                input.step = 'any';
+                input.required = true;
+                vectorDiv.appendChild(input);
+            }
+        }
+
+        // Inicializar al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            updateMatrixInputs();
+            
+            // Validación del formulario
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        });
+    </script>
+</body>
+</html>
