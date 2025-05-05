@@ -61,6 +61,10 @@ def capitulo1_view(request):
     grafica = None
 
     if request.method == "POST":
+        accion = request.POST.get("accion", "calcular")  # Por defecto "calcular"
+        
+        if accion == "comparar":
+            return comparar_metodos(request)
         metodo = request.POST.get("metodo")
         datos = {
             "x0": request.POST.get("x0") or None,
@@ -108,6 +112,56 @@ def capitulo1_view(request):
             "datos": datos,
             "resultado": resultado,
             "grafica": grafica
+        })
+
+    return render(request, "formulario.html", {"datos": datos})
+
+def comparar_metodos(request):
+    datos = {}
+    resultados = {}
+    mejor_metodo = None
+    min_iteraciones = float('inf')
+
+    if request.method == "POST":
+        datos = {
+            "x0": request.POST.get("x0"),
+            "tol": request.POST.get("tolerancia"),
+            "fx": request.POST.get("fx"),
+            "gx": request.POST.get("gx"),
+            "dfx": request.POST.get("dfx"),
+            "niter": request.POST.get("niter"),
+            "a": request.POST.get("a"),
+            "b": request.POST.get("b"),
+            "x1": request.POST.get("x1"),
+            "ddfx": request.POST.get("ddfx"),
+        }
+
+        metodos_a_probar = {
+            "Bisección": lambda: biseccion(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"]),
+            "Punto Fijo": lambda: punto_fijo(datos["gx"], datos["x0"], datos["tol"], datos["niter"]),
+            "Regla Falsa": lambda: regla_falsa(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"]),
+            "Secante": lambda: secante(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"]),
+            "Newton": lambda: newton(datos["fx"], datos["dfx"], datos["x0"], datos["tol"], datos["niter"]),
+            "Raíces Múltiples": lambda: raices_multiples(datos["fx"], datos["dfx"], datos["ddfx"], datos["x0"], datos["tol"], datos["niter"]),
+        }
+
+        for nombre, metodo_func in metodos_a_probar.items():
+            try:
+                resultado = metodo_func()
+                if "resultados" in resultado:
+                    iteraciones = len(resultado["resultados"])
+                    resultados[nombre] = iteraciones
+                    if iteraciones < min_iteraciones:
+                        min_iteraciones = iteraciones
+                        mejor_metodo = nombre
+            except Exception as e:
+                resultados[nombre] = f"Error: {str(e)}"
+
+        return render(request, "resultados.html", {
+            "comparacion": True,
+            "resultados_comparacion": resultados,
+            "mejor_metodo": mejor_metodo,
+            "datos": datos
         })
 
     return render(request, "formulario.html", {"datos": datos})

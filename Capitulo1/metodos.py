@@ -1,4 +1,6 @@
 import math
+import numpy as np
+import pandas as pd
 
 def f_expr(expr, x):
     return eval(expr, {"x": x, "math": math})
@@ -87,49 +89,42 @@ def newton(fx_str, dfx_str, x0, tol, niter):
         x0 = x1
     return {"resultados": resultados, "raiz": x1}
 
-def raices_multiples(fx_str, dfx_str, ddfx_str, x0, tol, niter, conoce_multiplicidad=True, multiplicidad=1):
-    """
-    Método de raíces múltiples que guarda TODAS las iteraciones como en consola.
-    """
+def raices_multiples(fx_str, dfx_str, ddfx_str, x0, tol, niter):
     x0, tol, niter = float(x0), float(tol), int(niter)
     resultados = []
+
+    error = 100
     iteracion = 0
-    error = 100  # Error inicial grande
 
-    while iteracion < niter:
+    while error > tol and iteracion < niter:
         x = x0
-        fx = f_expr(fx_str, x)
-        fpx = f_expr(dfx_str, x)
-        fppx = f_expr(ddfx_str, x) if not conoce_multiplicidad else None
+        try:
+            f   = f_expr(fx_str,  x)
+            df  = f_expr(dfx_str, x)
+            ddf = f_expr(ddfx_str, x)  # Se evalúa aunque no se usa
+        except Exception as e:
+            return {"error": f"Error al evaluar funciones: {e}"}
 
-        if conoce_multiplicidad:
-            if abs(fpx) < 1e-12:
-                break
-            x1 = x0 - multiplicidad * (fx / fpx)
-        else:
-            denom = (fpx ** 2) - (fx * fppx)
-            if abs(denom) < 1e-12:
-                break
-            x1 = x0 - (fx * fpx) / denom
+        if df == 0:
+            return {"error": f"Derivada cero en iteración {iteracion+1}, no se puede dividir por cero."}
 
-        # Calculamos el error
-        
+        # Como m = 1, simplemente:
+        x1 = x0 - (f / df)
+        err = abs(x1 - x0)
 
-        # Guardamos todos los valores
         resultados.append({
             "iter": iteracion + 1,
-            "Xn": round(x1, 6),
-            "F(Xn)": fx,
-            "Error": round(error, 6)
+            "x0":   x0,
+            "x1":   x1,
+            "error": err
         })
 
-        error = abs(x1 - x0) 
-        if error < tol or abs(fx) < tol:
+        if abs(f) < tol:
             return {"resultados": resultados, "raiz": x1}
 
-        # Preparar siguiente iteración
         x0 = x1
+        error = err
         iteracion += 1
 
-    # Si terminó por número máximo de iteraciones
-    return {"resultados": resultados, "error": "El método falló en encontrar la raíz dentro del número máximo de iteraciones."}
+    # Si terminó sin encontrar exactamente, devolvemos la última aproximación
+    return {"resultados": resultados, "raiz": x0}

@@ -8,6 +8,19 @@
 <body class="bg-light">
 <div class="container mt-5">
     <h1 class="text-center mb-4">Resultados del Método: {{ datos.metodo|title }}</h1>
+    
+    {% if comparacion %}
+    <div class="alert alert-info">
+        <h4>Método más eficiente: {{ mejor_metodo }}</h4>
+        <h5>Iteraciones de cada método:</h5>
+        <ul>
+            {% for metodo, iteraciones in resultados_comparacion.items %}
+                <li><strong>{{ metodo }}:</strong> {{ iteraciones }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
 
     {% if resultado.error %}
         <div class="alert alert-danger">
