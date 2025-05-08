@@ -61,6 +61,32 @@
     <div class="text-center mt-4">
         <a href="/" class="btn btn-secondary">Volver al formulario</a>
     </div>
+    {% if not comparacion and datos.comparar == "si" %}
+    <div class="text-center mt-4">
+        <form method="post">
+            {% csrf_token %}
+            <!-- Reenvía todos los datos ocultos -->
+            <input type="hidden" name="metodo" value="{{ datos.metodo }}">
+            <input type="hidden" name="x0" value="{{ datos.x0 }}">
+            <input type="hidden" name="x1" value="{{ datos.x1 }}">
+            <input type="hidden" name="a" value="{{ datos.a }}">
+            <input type="hidden" name="b" value="{{ datos.b }}">
+            <input type="hidden" name="tolerancia" value="{{ datos.tol }}">
+            <input type="hidden" name="niter" value="{{ datos.niter }}">
+            <input type="hidden" name="fx" value="{{ datos.fx }}">
+            <input type="hidden" name="gx" value="{{ datos.gx }}">
+            <input type="hidden" name="dfx" value="{{ datos.dfx }}">
+            <input type="hidden" name="ddfx" value="{{ datos.ddfx }}">
+            <input type="hidden" name="accion" value="comparar">
+
+            <input type="hidden" name="comparar" value="si">
+            <button type="submit" class="btn btn-outline-success mt-3">
+                Ver comparación de métodos
+            </button>
+        </form>
+    </div>
+{% endif %}
+
 </div>
 </body>
 </html>

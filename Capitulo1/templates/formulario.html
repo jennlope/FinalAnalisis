@@ -8,79 +8,173 @@
 <body class="bg-light">
 <div class="container mt-5">
     <h1 class="text-center mb-4">Capítulo 1: Métodos Numéricos</h1>
-    <form method="post">
-        {% csrf_token %}
+    <div class="row">
+        <!-- Formulario -->
+        <div class="col-md-8">
+            <form method="post">
+                {% csrf_token %}
 
-        <div class="mb-3">
-            <label for="metodo" class="form-label">Seleccione el método:</label>
-            <select class="form-select" name="metodo" required>
-                <option value="">-- Seleccione --</option>
-                <option value="biseccion">Bisección</option>
-                <option value="puntofijo">Punto Fijo</option>
-                <option value="reglafalsa">Regla Falsa</option>
-                <option value="secante">Secante</option>
-                <option value="newton">Newton</option>
-                <option value="multiples">Raíces Múltiples</option>
-            </select>
+                <div class="mb-3">
+                    <label for="metodo" class="form-label">Seleccione el método:</label>
+                    <select class="form-select" name="metodo" required>
+                        <option value="">-- Seleccione --</option>
+                        <option value="biseccion">Bisección</option>
+                        <option value="puntofijo">Punto Fijo</option>
+                        <option value="reglafalsa">Regla Falsa</option>
+                        <option value="secante">Secante</option>
+                        <option value="newton">Newton</option>
+                        <option value="multiples">Raíces Múltiples</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>X₀:</label>
+                        <input type="text" name="x0" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Niter:</label>
+                        <input type="number" name="niter" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Tolerancia:</label>
+                        <input type="text" name="tolerancia" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="x1">X₁: (Solo para Secante)</label>
+                        <input type="text" name="x1" class="form-control">
+                    </div>
+                </div>
+
+                <hr>
+                <h5>Intervalo [a, b] (usado en Bisección, Regla Falsa, Secante):</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>a:</label>
+                        <input type="text" name="a" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>b:</label>
+                        <input type="text" name="b" class="form-control">
+                    </div>
+                </div>
+
+                <hr>
+                <h5>Funciones</h5>
+                <div class="mb-3">
+                    <label>F(x):</label>
+                    <input type="text" name="fx" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>g(x): (Solo para Punto Fijo)</label>
+                    <input type="text" name="gx" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>F'(x): (Solo para Newton y Raíces Múltiples)</label>
+                    <input type="text" name="dfx" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>F''(x): (Solo para Raíces Múltiples)</label>
+                    <input type="text" name="ddfx" class="form-control">
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <label for="comparar">¿Quieres comparar con todos los métodos?</label>
+                    <select name="comparar" id="comparar" class="form-select" onchange="gestionarComparacion()" required>
+                        <option value="no">No</option>
+                        <option value="si">Sí</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mt-3">Calcular</button>
+            </form>
         </div>
 
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <label>X₀:</label>
-                <input type="text" name="x0" class="form-control">
+        <!-- Instrucciones -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    Instrucciones para ingresar funciones
+                </div>
+                <div class="card-body">
+                    <ul style="font-size: 0.95em;">
+                        <li>Usa <code>x</code> como variable.</li>
+                        <li>Funciones trigonométricas:
+                            <ul>
+                                <li><code>math.sin(x)</code> para seno</li>
+                                <li><code>math.cos(x)</code> para coseno</li>
+                                <li><code>math.tan(x)</code> para tangente</li>
+                            </ul>
+                        </li>
+                        <li>Funciones exponenciales y logarítmicas:
+                            <ul>
+                                <li><code>math.exp(x)</code> para <i>eˣ</i></li>
+                                <li><code>math.log(x)</code> para logaritmo natural (ln)</li>
+                                <li><code>math.log10(x)</code> para logaritmo base 10</li>
+                            </ul>
+                        </li>
+                        <li>Potencias: usa <code>**</code>, por ejemplo <code>x**2</code> para <i>x²</i>.</li>
+                        <li>Raíz cuadrada: <code>math.sqrt(x)</code></li>
+                        <li>Constantes útiles:
+                            <ul>
+                                <li><code>math.pi</code> para π</li>
+                                <li><code>math.e</code> para e</li>
+                            </ul>
+                        </li>
+                        <li>Ejemplo válido: <code>x**3 - 4*math.sin(x) + 2</code></li>
+                        <li>No uses "=" ni comas dentro de las funciones.</li>
+                        <li>Verifica que las funciones estén bien escritas antes de calcular.</li>
+                    </ul>
+                </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <label>Niter:</label>
-                <input type="number" name="niter" class="form-control">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label>Tolerancia:</label>
-                <input type="text" name="tolerancia" class="form-control">
-            </div>
-            <div class="col-md-4 mb-3">
-                <label for="x1">X₁: (Solo para Secante)</label>
-                <input type="text" name="x1" class="form-control">
-            </div>
-            
         </div>
-
-        <hr>
-        <h5>Intervalo [a, b] (usado en Bisección, Regla Falsa):</h5>
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label>a:</label>
-                <input type="text" name="a" class="form-control">
-            </div>
-            <div class="col-md-6 mb-3">
-                <label>b:</label>
-                <input type="text" name="b" class="form-control">
-            </div>
-        </div>
-
-        <hr>
-        <h5>Funciones</h5>
-        <div class="mb-3">
-            <label>F(x):</label>
-            <input type="text" name="fx" class="form-control">
-        </div>
-        <div class="mb-3">
-            <label>g(x): (Solo para Punto Fijo)</label>
-            <input type="text" name="gx" class="form-control">
-        </div>
-        <div class="mb-3">
-            <label>F'(x): (Solo para Newton y Raíces Múltiples)</label>
-            <input type="text" name="dfx" class="form-control">
-        </div>
-        <div class="mb-3">
-            <label>F''(x): (Solo para Raíces Múltiples)</label>
-            <input type="text" name="ddfx" class="form-control">
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100 mt-3">Calcular</button>
-        <button type="submit" name="accion" value="comparar" class="btn btn-success w-100 mt-2">
-            Comparar Métodos
-        </button>        
-    </form>
+    </div>
 </div>
+<script>
+    function gestionarComparacion() {
+        const quiereComparar = document.getElementById("comparar").value === "si";
+    
+        const campos = [
+            "fx", "x0", "x1", "gx", "dfx", "ddfx", "a", "b", "tolerancia", "niter"
+        ];
+    
+        campos.forEach(nombre => {
+            const campo = document.getElementsByName(nombre)[0];
+            if (campo) {
+                campo.required = quiereComparar;
+            }
+        });
+    }
+    
+    // Validación final al enviar
+    document.addEventListener("DOMContentLoaded", () => {
+        const form = document.querySelector("form");
+        form.addEventListener("submit", (e) => {
+            const comparar = document.getElementById("comparar").value === "si";
+            if (!comparar) return; // no comparar → no validar
+    
+            const camposRequeridos = {
+                fx: "F(x)", x0: "X₀", x1: "X₁", gx: "g(x)",
+                dfx: "F'(x)", ddfx: "F''(x)", a: "a", b: "b",
+                tolerancia: "Tolerancia", niter: "Niter"
+            };
+    
+            const faltan = [];
+    
+            for (const [nombre, etiqueta] of Object.entries(camposRequeridos)) {
+                const campo = form.querySelector(`[name="${nombre}"]`);
+                if (!campo || campo.value.trim() === "") {
+                    faltan.push(etiqueta);
+                }
+            }
+    
+            if (faltan.length > 0) {
+                e.preventDefault();
+                alert("⚠️ Debes llenar estos campos para comparar:\n\n" + faltan.join(", "));
+            }
+        });
+    });
+    </script>
+    
 </body>
 </html>

@@ -61,10 +61,13 @@ def capitulo1_view(request):
     grafica = None
 
     if request.method == "POST":
-        accion = request.POST.get("accion", "calcular")  # Por defecto "calcular"
-        
-        if accion == "comparar":
+        accion = request.POST.get("accion", "calcular")
+        comparar = request.POST.get("comparar", "no")
+
+        # Si el usuario hizo clic en "Ver comparación"
+        if accion == "comparar" and comparar == "si":
             return comparar_metodos(request)
+
         metodo = request.POST.get("metodo")
         datos = {
             "x0": request.POST.get("x0") or None,
@@ -78,6 +81,7 @@ def capitulo1_view(request):
             "b": request.POST.get("b") or None,
             "ddfx": request.POST.get("ddfx") or None,
             "metodo": metodo,
+            "comparar": comparar,
         }
 
         try:
