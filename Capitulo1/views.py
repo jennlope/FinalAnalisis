@@ -123,7 +123,7 @@ def capitulo1_view(request):
 def comparar_metodos(request):
     datos = {}
     resultados = {}
-    mejor_metodo = None
+    metodos_eficientes = []
     min_iteraciones = float('inf')
 
     if request.method == "POST":
@@ -144,7 +144,7 @@ def comparar_metodos(request):
             "Bisección": lambda: biseccion(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"]),
             "Punto Fijo": lambda: punto_fijo(datos["gx"], datos["x0"], datos["tol"], datos["niter"]),
             "Regla Falsa": lambda: regla_falsa(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"]),
-            "Secante": lambda: secante(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"]),
+            "Secante": lambda: secante(datos["fx"], datos["x0"], datos["x1"], datos["tol"], datos["niter"]),
             "Newton": lambda: newton(datos["fx"], datos["dfx"], datos["x0"], datos["tol"], datos["niter"]),
             "Raíces Múltiples": lambda: raices_multiples(datos["fx"], datos["dfx"], datos["ddfx"], datos["x0"], datos["tol"], datos["niter"]),
         }
@@ -157,14 +157,19 @@ def comparar_metodos(request):
                     resultados[nombre] = iteraciones
                     if iteraciones < min_iteraciones:
                         min_iteraciones = iteraciones
-                        mejor_metodo = nombre
+                        metodos_eficientes = [nombre]
+                    elif iteraciones == min_iteraciones:
+                        metodos_eficientes.append(nombre)
             except Exception as e:
                 resultados[nombre] = f"Error: {str(e)}"
 
+        # Ordenar por eficiencia (menor a mayor)
+        resultados_ordenados = dict(sorted(resultados.items(), key=lambda x: x[1] if isinstance(x[1], int) else float('inf')))
+
         return render(request, "resultados.html", {
             "comparacion": True,
-            "resultados_comparacion": resultados,
-            "mejor_metodo": mejor_metodo,
+            "resultados_comparacion": resultados_ordenados,
+            "mejor_metodo": ", ".join(metodos_eficientes),
             "datos": datos
         })
 
