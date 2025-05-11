@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe Comparativo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Informe Comparativo de Métodos</h1>
+
+    {% if punto_eval %}
+        <h5>Comparación de errores en x = {{ punto_eval }}:</h5>
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Método</th>
+                    <th>Valor aproximado</th>
+                    <th>Valor real</th>
+                    <th>Error absoluto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metodo, datos in informe.items %}
+                    <tr>
+                        <td>{{ metodo }}</td>
+                        <td>{{ datos.aproximado }}</td>
+                        <td>{{ datos.real }}</td>
+                        <td>{{ datos.error }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-warning">
+            No se ingresó un punto de evaluación. El informe no puede calcular errores.
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{% url 'interpolacion_formulario' %}" class="btn btn-secondary">Volver al formulario</a>
+    </div>
+</div>
+</body>
+</html>

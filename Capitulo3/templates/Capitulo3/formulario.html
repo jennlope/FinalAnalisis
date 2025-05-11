@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Interpolación - Capítulo 3</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Interpolación (Capítulo 3)</h1>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Formulario principal -->
+        <div class="col-md-8">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="metodo">Selecciona el método de interpolación:</label>
+                    <select class="form-select" name="metodo" required>
+                        <option value="">-- Selecciona uno --</option>
+                        <option value="vandermonde">Vandermonde</option>
+                        <option value="lagrange">Lagrange</option>
+                        <option value="newton">Newton</option>
+                        <option value="spline_lineal">Spline Lineal</option>
+                        <option value="spline_cubico">Spline Cúbico</option>
+                    </select>
+                </div>
+
+                <h5>Ingresa hasta 8 puntos (x, y):</h5>
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>X</th>
+                            <th>Y</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in rango %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><input type="number" step="any" name="x{{ i }}" class="form-control"></td>
+                            <td><input type="number" step="any" name="y{{ i }}" class="form-control"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="mb-3">
+                    <label for="punto_eval">Punto a evaluar (opcional):</label>
+                    <input type="number" name="punto_eval" step="any" class="form-control">
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" name="generar_informe" class="form-check-input" id="informeCheck">
+                    <label class="form-check-label" for="informeCheck">¿Generar informe comparativo?</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">Calcular</button>
+            </form>
+        </div>
+
+        <!-- Tarjeta de ayuda -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    Instrucciones para ingresar los datos
+                </div>
+                <div class="card-body" style="font-size: 0.95em;">
+                    <ul>
+                        <li>Selecciona un método de interpolación.</li>
+                        <li>Ingresa entre <strong>2 y 8 puntos</strong> como pares (x, y).</li>
+                        <li>Los valores de <strong>x deben ser únicos</strong>.</li>
+                        <li>Los valores deben ser numéricos (enteros o decimales).</li>
+                        <li>El campo “Punto a evaluar” es opcional.</li>
+                        <li>Activa la opción de informe si deseas comparar todos los métodos.</li>
+                        <li>El informe calculará el error en el punto de evaluación (si está dentro del intervalo).</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
