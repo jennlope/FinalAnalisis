@@ -20,12 +20,10 @@ def resultado_interpolacion(request):
     global datos_para_informe
     
     if request.method == "POST":
-        print("🧾 POST recibido:", request.POST) 
-        
-    if request.method == "POST":
         form = InterpolacionForm(request.POST)
         metodo = request.POST.get("metodo")
 
+        # Validación básica del método
         if not metodo:
             return render(request, "Capitulo3/formulario.html", {
                 "form": form,
@@ -34,6 +32,7 @@ def resultado_interpolacion(request):
             })
 
         try:
+            # Procesamiento de datos de entrada
             x_vals = list(map(float, [v for k, v in request.POST.items() if k.startswith('x') and v != '']))
             y_vals = list(map(float, [v for k, v in request.POST.items() if k.startswith('y') and v != '']))
         except ValueError:
@@ -43,6 +42,7 @@ def resultado_interpolacion(request):
                 "error": "Todos los valores de x e y deben ser números válidos."
             })
 
+        # Validación de datos
         if len(x_vals) != len(y_vals):
             return render(request, "Capitulo3/formulario.html", {
                 "form": form,
@@ -64,6 +64,7 @@ def resultado_interpolacion(request):
                 "error": "Los valores de x deben ser únicos (no repetidos)."
             })
 
+        # Procesar punto de evaluación
         punto_eval = request.POST.get("punto_eval")
         try:
             punto_eval = float(punto_eval) if punto_eval else None
@@ -76,23 +77,25 @@ def resultado_interpolacion(request):
 
         generar_informe = 'generar_informe' in request.POST
 
-        x = x_vals
-        y = y_vals
+        # Preparación de datos
+        x = np.array(x_vals)
+        y = np.array(y_vals)
         resultado = {}
         x_sym = sp.Symbol('x')
 
         try:
+            # Aplicar el método seleccionado
             if metodo == "vandermonde":
                 pol, _ = vandermonde(x, y)
-                resultado["vandermonde"] = str(pol)
+                resultado["vandermonde"] = sp.pretty(pol, use_unicode=False)
                 y_plot = [float(pol.evalf(subs={x_sym: val})) for val in x]
             elif metodo == "lagrange":
                 pol = lagrange(x, y)
-                resultado["lagrange"] = str(pol)
+                resultado["lagrange"] = sp.pretty(pol, use_unicode=False)
                 y_plot = [float(pol.evalf(subs={x_sym: val})) for val in x]
             elif metodo == "newton":
                 pol, _ = newton_divididas(x, y)
-                resultado["newton"] = str(pol)
+                resultado["newton"] = sp.pretty(pol, use_unicode=False)
                 y_plot = [float(pol.evalf(subs={x_sym: val})) for val in x]
             elif metodo == "spline_lineal":
                 spl_l = spline_lineal(x, y)
@@ -109,47 +112,92 @@ def resultado_interpolacion(request):
                 "form": form,
                 "rango": range(8),
                 "error": f"Error al calcular: {str(e)}"
-            })
+         })
 
-        fig, ax = plt.subplots()
-        if y_plot:
+        # Configuración de la gráfica
+        plt.style.use('seaborn')
+        fig, ax = plt.subplots(figsize=(10, 6))
+        
+        # Estilos por método
+        method_styles = {
+            "vandermonde": ("blue", "-", "Polinomio (Vandermonde)"),
+            "lagrange": ("green", "--", "Polinomio (Lagrange)"),
+            "newton": ("purple", ":", "Polinomio (Newton)"),
+            "spline_lineal": ("orange", "-", "Spline Lineal"),
+            "spline_cubico": ("red", "-", "Spline Cúbico")
+        }
+        
+        color, linestyle, label = method_styles[metodo]
+        
+        # Graficar puntos de datos
+        ax.plot(x, y, 'ro', markersize=8, label='Puntos de datos', zorder=3)
+        
+        # Graficar según el método
+        if metodo in ["vandermonde", "lagrange", "newton"]:
+            x_range = max(x) - min(x)
+            x_plot = np.linspace(min(x) - 0.1*x_range, max(x) + 0.1*x_range, 500)
+            y_plot = [float(pol.evalf(subs={x_sym: xi})) for xi in x_plot]
+            ax.plot(x_plot, y_plot, color=color, linestyle=linestyle, label=label, linewidth=2)
+            
+            # Destacar punto evaluado si existe
+            if punto_eval and min(x) <= punto_eval <= max(x):
+                y_eval = float(pol.evalf(subs={x_sym: punto_eval}))
+                ax.plot(punto_eval, y_eval, 'ks', markersize=8, label=f'Evaluación (x={punto_eval:.2f})')
+                
+        elif metodo == "spline_lineal":
+            for i in range(len(x)-1):
+                x_seg = [x[i], x[i+1]]
+                y_seg = [y[i], y[i+1]]
+                ax.plot(x_seg, y_seg, color=color, linestyle=linestyle, 
+                       label=label if i==0 else "", linewidth=2)
+                
+        elif metodo == "spline_cubico":
+            from scipy.interpolate import CubicSpline
+            cs = CubicSpline(x, y)
             x_plot = np.linspace(min(x), max(x), 500)
-            y_pol = [float(pol.evalf(subs={x_sym: val})) for val in x_plot]
-            ax.plot(x_plot, y_pol, label="Interpolación")
-        ax.plot(x, y, 'ro', label="Puntos")
-        ax.legend()
-        ax.grid()
-
+            ax.plot(x_plot, cs(x_plot), color=color, linestyle=linestyle, 
+                   label=label, linewidth=2)
+        
+        # Configuración estética del gráfico
+        ax.set_title(f'Interpolación usando método {metodo.capitalize()}', fontsize=14)
+        ax.set_xlabel('x', fontsize=12)
+        ax.set_ylabel('y', fontsize=12)
+        ax.grid(True, linestyle='--', alpha=0.5)
+        ax.legend(fontsize=10, loc='best')
+        plt.tight_layout()
+        
+        # Convertir gráfica a base64
         buf = io.BytesIO()
-        plt.savefig(buf, format='png')
+        plt.savefig(buf, format='png', dpi=100)
         buf.seek(0)
-        image_png = buf.getvalue()
-        grafica = base64.b64encode(image_png).decode('utf-8')
+        grafica = base64.b64encode(buf.getvalue()).decode('utf-8')
         buf.close()
         plt.close()
 
+        # Almacenar datos para posible informe
         datos_para_informe = {
-            "x": x,
-            "y": y,
+            "x": x.tolist(),
+            "y": y.tolist(),
             "punto_eval": punto_eval,
             "vandermonde": vandermonde(x, y)[0],
             "lagrange": lagrange(x, y),
-            "newton": newton_divididas(x, y)[0]
+            "newton": newton_divididas(x, y)[0],
+            "metodo_usado": metodo
         }
 
         return render(request, "Capitulo3/resultados.html", {
             "resultado": resultado,
             "grafica": grafica,
-            "form": form,
             "punto_eval": punto_eval,
-            "generar_informe": generar_informe
+            "generar_informe": generar_informe,
+            "metodo": metodo
         })
 
     return render(request, "Capitulo3/formulario.html", {
         "form": InterpolacionForm(),
         "rango": range(8)
     })
-
+    
 def generar_informe(request):
     global datos_para_informe
     x_sym = sp.Symbol('x')
