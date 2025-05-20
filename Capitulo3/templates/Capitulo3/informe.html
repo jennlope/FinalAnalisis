@@ -8,7 +8,11 @@
 <body class="bg-light">
 <div class="container mt-5">
     <h1 class="text-center mb-4">Informe Comparativo de Métodos</h1>
-
+    {% if metodo_real %}
+    <div class="alert alert-info mt-2">
+        <strong>Nota:</strong> El valor real se obtuvo mediante: <em>{{ metodo_real }}</em>.
+    </div>
+    {% endif %}
     {% if punto_eval %}
         <h5>Comparación de errores en x = {{ punto_eval }}:</h5>
         <table class="table table-bordered table-striped mt-3">

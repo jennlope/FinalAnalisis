@@ -80,6 +80,9 @@ def resultado_interpolacion(request):
         # Preparación de datos
         x = np.array(x_vals)
         y = np.array(y_vals)
+        indices_ordenados = np.argsort(x)
+        x = x[indices_ordenados]
+        y = y[indices_ordenados]
         resultado = {}
         x_sym = sp.Symbol('x')
 
@@ -115,7 +118,10 @@ def resultado_interpolacion(request):
          })
 
         # Configuración de la gráfica
-        plt.style.use('seaborn')
+        try:
+            plt.style.use('seaborn-v0_8')  # compatible con versiones recientes
+        except:
+            plt.style.use('default')  # fallback
         fig, ax = plt.subplots(figsize=(10, 6))
         
         # Estilos por método
@@ -204,31 +210,90 @@ def generar_informe(request):
     informe = {}
 
     if datos_para_informe and datos_para_informe.get("punto_eval") is not None:
-        x = datos_para_informe["x"]
-        y = datos_para_informe["y"]
+        x = np.array(datos_para_informe["x"])
+        y = np.array(datos_para_informe["y"])
         x_eval = datos_para_informe["punto_eval"]
 
+        # Ordenar x e y por si acaso
+        orden = np.argsort(x)
+        x = x[orden]
+        y = y[orden]
+
+        # Valor "real" usando interpolación lineal o extrapolación
         def real_val(x_eval):
-            for i in range(len(x) - 1):
-                if x[i] <= x_eval <= x[i+1]:
-                    return y[i] + (y[i+1] - y[i]) / (x[i+1] - x[i]) * (x_eval - x[i])
-            return None
+            if x_eval <= x[0]:
+                # Extrapolación hacia la izquierda
+                i = 0
+            elif x_eval >= x[-1]:
+                # Extrapolación hacia la derecha
+                i = len(x) - 2
+            else:
+                # Interpolación entre dos puntos internos
+                for j in range(len(x) - 1):
+                    if x[j] <= x_eval <= x[j + 1]:
+                        i = j
+                        break
+            xi, xf = x[i], x[i + 1]
+            yi, yf = y[i], y[i + 1]
+            return yi + (yf - yi) / (xf - xi) * (x_eval - xi)
 
         y_real = real_val(x_eval)
+        if x_eval < x[0]:
+            metodo_real = f"Extrapolación (izquierda fuera del dominio [{x[0]}, {x[-1]}])"
+        elif x_eval > x[-1]:
+            metodo_real = f"Extrapolación (derecha fuera del dominio [{x[0]}, {x[-1]}])"
+        else:
+            metodo_real = "Interpolación dentro del dominio"
 
+
+        # Métodos polinómicos
         for metodo in ["vandermonde", "lagrange", "newton"]:
             pol = datos_para_informe[metodo]
             y_aprox = float(pol.evalf(subs={x_sym: x_eval}))
-            error = abs(y_real - y_aprox) if y_real is not None else "N/A"
+            error = abs(y_real - y_aprox)
             informe[metodo.capitalize()] = {
                 "aproximado": y_aprox,
                 "real": y_real,
                 "error": error
             }
 
+        # Spline Lineal
+        from Capitulo3.utils import spline_lineal
+        spl = spline_lineal(x, y)
+        y_aprox_spline = None
+        for (s, (xi, xf)) in spl:
+            if xi <= x_eval <= xf:
+                y_aprox_spline = float(s.evalf(subs={x_sym: x_eval}))
+                break
+        if y_aprox_spline is None:
+            # Extrapolación con primer o último spline
+            if x_eval < x[0]:
+                s, _ = spl[0]
+            else:
+                s, _ = spl[-1]
+            y_aprox_spline = float(s.evalf(subs={x_sym: x_eval}))
+
+        error = abs(y_real - y_aprox_spline)
+        informe["Spline Lineal"] = {
+            "aproximado": y_aprox_spline,
+            "real": y_real,
+            "error": error
+        }
+
+        # Spline Cúbico (ya extrapola por defecto)
+        from scipy.interpolate import CubicSpline
+        cs = CubicSpline(x, y, extrapolate=True)
+        y_aprox = cs(x_eval)
+        error = abs(y_real - y_aprox)
+        informe["Spline Cúbico"] = {
+            "aproximado": float(y_aprox),
+            "real": y_real,
+            "error": error
+        }
+
         return render(request, "Capitulo3/informe.html", {
-            "informe": informe,
-            "punto_eval": x_eval
-        })
+        "informe": informe,
+        "punto_eval": x_eval,
+        "metodo_real": metodo_real})
 
     return render(request, "Capitulo3/informe.html", {"punto_eval": None})
