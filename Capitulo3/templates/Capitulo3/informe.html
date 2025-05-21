@@ -76,6 +76,14 @@
         </div>
     {% endif %}
 
+   {% if mejores_metodos %}
+    <div class="alert alert-success mt-4">
+        <strong>Mejor método{% if mejores_metodos|length > 1 %}s{% endif %} según el menor error:</strong>
+        {{ mejores_metodos|join:", " }}
+    </div>
+    {% endif %}
+
+
     <div class="text-center mt-4">
         <a href="{% url 'interpolacion_formulario' %}" class="btn btn-secondary">Volver al formulario</a>
     </div>

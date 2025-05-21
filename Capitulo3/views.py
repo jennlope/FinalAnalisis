@@ -198,7 +198,7 @@ def resultado_interpolacion(request):
             "grafica": grafica,
             "punto_eval": punto_eval,
             "generar_informe": generar_informe,
-            "metodo": metodo
+            "metodo": metodo,
         })
 
     return render(request, "Capitulo3/formulario.html", {
@@ -316,7 +316,10 @@ def generar_informe(request):
             expr = " + ".join(expr_parts)
             intervalo = f"[{x[i]}, {x[i+1]}]"
             spl_cu_strs.append((expr, intervalo))
-
+        # Buscar el/los mejores métodos con menor error
+        errores = [(metodo, datos["error"]) for metodo, datos in informe.items()]
+        min_error = min(error for _, error in errores)
+        mejores_metodos = [metodo for metodo, error in errores if abs(error - min_error) < 1e-10]
 
         # --- Render con polinomios en el contexto ---
         return render(request, "Capitulo3/informe.html", {
@@ -328,6 +331,7 @@ def generar_informe(request):
         "polinomio_newton":         polinomios_str["newton"],
         "splines_lineales":         spl_strs,
         "splines_cubicos":          spl_cu_strs,
+        "mejores_metodos": mejores_metodos,
         })
 
 
