@@ -11,24 +11,16 @@
 
     <h4>Polinomios interpolantes:</h4>
     <div class="mb-4">
-        <p><strong>Vandermonde:</strong><br>{{ resultado.vandermonde }}</p>
-        <p><strong>Lagrange:</strong><br>{{ resultado.lagrange }}</p>
-        <p><strong>Newton:</strong><br>{{ resultado.newton }}</p>
+        {% if resultado.vandermonde %}
+            <p><strong>Vandermonde:</strong><br>{{ resultado.vandermonde }}</p>
+        {% endif %}
+        {% if resultado.lagrange %}
+            <p><strong>Lagrange:</strong><br>{{ resultado.lagrange }}</p>
+        {% endif %}
+        {% if resultado.newton %}
+            <p><strong>Newton:</strong><br>{{ resultado.newton }}</p>
+        {% endif %}
     </div>
-
-    <h4>Splines lineales:</h4>
-    <ul>
-        {% for s, inter in resultado.splines_lineales %}
-            <li><strong>En [{{ inter.0 }}, {{ inter.1 }}]:</strong> {{ s }}</li>
-        {% endfor %}
-    </ul>
-
-    <h4>Splines cúbicos:</h4>
-    <ul>
-        {% for s, inter in resultado.splines_cubicos %}
-            <li><strong>En [{{ inter.0 }}, {{ inter.1 }}]:</strong> {{ s }}</li>
-        {% endfor %}
-    </ul>
 
     {% if grafica %}
         <h4 class="mt-4">Gráfica:</h4>

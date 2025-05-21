@@ -1,5 +1,7 @@
 import numpy as np
 import sympy as sp
+import matplotlib
+matplotlib.use('Agg')  # Usar backend para generación de imágenes sin GUI
 import matplotlib.pyplot as plt
 import io, base64
 from django.shortcuts import render
@@ -208,34 +210,32 @@ def generar_informe(request):
     global datos_para_informe
     x_sym = sp.Symbol('x')
     informe = {}
+    polinomios_str = {}
 
     if datos_para_informe and datos_para_informe.get("punto_eval") is not None:
+        # --- Lectura y ordenamiento de datos ---
         x = np.array(datos_para_informe["x"])
         y = np.array(datos_para_informe["y"])
         x_eval = datos_para_informe["punto_eval"]
 
-        # Ordenar x e y por si acaso
         orden = np.argsort(x)
         x = x[orden]
         y = y[orden]
 
-        # Valor "real" usando interpolación lineal o extrapolación
-        def real_val(x_eval):
-            if x_eval <= x[0]:
-                # Extrapolación hacia la izquierda
+        # --- Cálculo del valor "real" (interp. lineal/extrap.) ---
+        def real_val(xe):
+            if xe <= x[0]:
                 i = 0
-            elif x_eval >= x[-1]:
-                # Extrapolación hacia la derecha
+            elif xe >= x[-1]:
                 i = len(x) - 2
             else:
-                # Interpolación entre dos puntos internos
                 for j in range(len(x) - 1):
-                    if x[j] <= x_eval <= x[j + 1]:
+                    if x[j] <= xe <= x[j+1]:
                         i = j
                         break
-            xi, xf = x[i], x[i + 1]
-            yi, yf = y[i], y[i + 1]
-            return yi + (yf - yi) / (xf - xi) * (x_eval - xi)
+            xi, xf = x[i], x[i+1]
+            yi, yf = y[i], y[i+1]
+            return yi + (yf - yi)/(xf - xi)*(xe - xi)
 
         y_real = real_val(x_eval)
         if x_eval < x[0]:
@@ -245,19 +245,25 @@ def generar_informe(request):
         else:
             metodo_real = "Interpolación dentro del dominio"
 
-
-        # Métodos polinómicos
+        # --- Métodos polinómicos: Vandermonde, Lagrange, Newton ---
         for metodo in ["vandermonde", "lagrange", "newton"]:
             pol = datos_para_informe[metodo]
+
+            # 1) Generar cadena del polinomio (simplificado y expandido)
+            pol_simple = sp.expand(sp.simplify(pol))
+            pol_str = str(pol_simple)
+            polinomios_str[metodo] = pol_str
+
+            # 2) Evaluar y calcular error
             y_aprox = float(pol.evalf(subs={x_sym: x_eval}))
             error = abs(y_real - y_aprox)
             informe[metodo.capitalize()] = {
                 "aproximado": y_aprox,
-                "real": y_real,
-                "error": error
+                "real":      y_real,
+                "error":     error
             }
 
-        # Spline Lineal
+        # --- Spline Lineal ---
         from Capitulo3.utils import spline_lineal
         spl = spline_lineal(x, y)
         y_aprox_spline = None
@@ -266,34 +272,66 @@ def generar_informe(request):
                 y_aprox_spline = float(s.evalf(subs={x_sym: x_eval}))
                 break
         if y_aprox_spline is None:
-            # Extrapolación con primer o último spline
-            if x_eval < x[0]:
-                s, _ = spl[0]
-            else:
-                s, _ = spl[-1]
+            s, _ = (spl[0] if x_eval < x[0] else spl[-1])
             y_aprox_spline = float(s.evalf(subs={x_sym: x_eval}))
-
         error = abs(y_real - y_aprox_spline)
         informe["Spline Lineal"] = {
             "aproximado": y_aprox_spline,
-            "real": y_real,
-            "error": error
+            "real":       y_real,
+            "error":      error
         }
 
-        # Spline Cúbico (ya extrapola por defecto)
+        # --- Spline Cúbico ---
         from scipy.interpolate import CubicSpline
         cs = CubicSpline(x, y, extrapolate=True)
-        y_aprox = cs(x_eval)
-        error = abs(y_real - y_aprox)
+        y_aprox_cu = cs(x_eval)
+        error = abs(y_real - y_aprox_cu)
         informe["Spline Cúbico"] = {
-            "aproximado": float(y_aprox),
-            "real": y_real,
-            "error": error
+            "aproximado": float(y_aprox_cu),
+            "real":       y_real,
+            "error":      error
         }
+        # Guardar también los polinomios de los splines en formato de texto para mostrar
+        spl_strs = []
+        for s, inter in spl:
+            intervalo = f"[{inter[0]}, {inter[1]}]"
+            spl_strs.append((str(s), intervalo))
 
+        # CubicSpline no tiene forma simbólica directa, así que lo mostramos como coeficientes por tramo
+        spl_cu_strs = []
+        for i in range(len(x) - 1):
+            coefs = cs.c[:, i]  # Los coeficientes vienen como columnas
+            expr_parts = []
+            potencias = [3, 2, 1, 0]
+            for j in range(len(coefs)):
+                coef = coefs[j]
+                potencia = potencias[j]
+                if abs(coef) > 1e-12:  # Evita imprimir términos insignificantes
+                    if potencia == 0:
+                        expr_parts.append(f"{coef:.3f}")
+                    elif potencia == 1:
+                        expr_parts.append(f"{coef:.3f}(x - {x[i]})")
+                    else:
+                        expr_parts.append(f"{coef:.3f}(x - {x[i]})^{potencia}")
+            expr = " + ".join(expr_parts)
+            intervalo = f"[{x[i]}, {x[i+1]}]"
+            spl_cu_strs.append((expr, intervalo))
+
+
+        # --- Render con polinomios en el contexto ---
         return render(request, "Capitulo3/informe.html", {
-        "informe": informe,
-        "punto_eval": x_eval,
-        "metodo_real": metodo_real})
+        "informe":                  informe,
+        "punto_eval":               x_eval,
+        "metodo_real":              metodo_real,
+        "polinomio_vandermonde":    polinomios_str["vandermonde"],
+        "polinomio_lagrange":       polinomios_str["lagrange"],
+        "polinomio_newton":         polinomios_str["newton"],
+        "splines_lineales":         spl_strs,
+        "splines_cubicos":          spl_cu_strs,
+        })
 
-    return render(request, "Capitulo3/informe.html", {"punto_eval": None})
+
+    # Si no hay punto de evaluación, sólo muestra el formulario vacío
+    return render(request, "Capitulo3/informe.html", {
+        "punto_eval": None
+    })

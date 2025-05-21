@@ -8,11 +8,46 @@
 <body class="bg-light">
 <div class="container mt-5">
     <h1 class="text-center mb-4">Informe Comparativo de Métodos</h1>
+
     {% if metodo_real %}
     <div class="alert alert-info mt-2">
         <strong>Nota:</strong> El valor real se obtuvo mediante: <em>{{ metodo_real }}</em>.
     </div>
     {% endif %}
+
+    {# Mostrar los polinomios si existen #}
+    {% if polinomio_vandermonde %}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <strong>Polinomios interpolantes</strong>
+        </div>
+        <div class="card-body">
+            <p><strong>Vandermonde:</strong> {{ polinomio_vandermonde }}</p>
+            <p><strong>Lagrange:</strong>    {{ polinomio_lagrange }}</p>
+            <p><strong>Newton:</strong>      {{ polinomio_newton }}</p>
+        </div>
+    </div>
+    {% endif %}
+    {% if splines_lineales %}
+    <hr>
+    <p><strong>Splines lineales:</strong></p>
+    <ul>
+        {% for s, intervalo in splines_lineales %}
+            <li><strong>En {{ intervalo }}:</strong> {{ s }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if splines_cubicos %}
+    <p><strong>Splines cúbicos:</strong></p>
+    <ul>
+        {% for s, intervalo in splines_cubicos %}
+            <li><strong>En {{ intervalo }}:</strong> {{ s }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+
     {% if punto_eval %}
         <h5>Comparación de errores en x = {{ punto_eval }}:</h5>
         <table class="table table-bordered table-striped mt-3">
