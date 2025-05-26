@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Capítulo 2 - Métodos Iterativos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function actualizarFormulario() {
+           let dim = parseInt(document.getElementById("id_dimension").value);
+            for (let i = 0; i < 7; i++) {
+                for (let j = 0; j < 7; j++) {
+                    let celda = document.getElementById(`A${i}${j}`);
+                    if (celda) celda.style.display = (i < dim && j < dim) ? '' : 'none';
+                }
+                let b = document.getElementById(`b${i}`);
+                let x0 = document.getElementById(`x0${i}`);
+                if (b) b.style.display = (i < dim) ? '' : 'none';
+                if (x0) x0.style.display = (i < dim) ? '' : 'none';
+            }
+        }
+
+        function toggleComparacion() {
+            const comparar = document.getElementById("id_comparar").checked;
+            const metodoDiv = document.getElementById("metodo-seleccion");
+            const wDiv = document.getElementById("w-sor");
+
+            // Siempre mostrar el método
+            metodoDiv.style.display = "";
+
+            const metodo = document.getElementById("id_metodo").value;
+            wDiv.style.display = comparar || metodo === "sor" ? "" : "none";
+        }
+
+        function toggleSOR() {
+            const comparar = document.getElementById("id_comparar").checked;
+            const metodo = document.getElementById("id_metodo").value;
+            const wDiv = document.getElementById("w-sor");
+            wDiv.style.display = comparar || metodo === "sor" ? "" : "none";
+        }
+    </script>
+</head>
+<body class="bg-light" onload="actualizarFormulario(); toggleComparacion(); toggleSOR();">
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Métodos Iterativos (Capítulo 2)</h1>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="row">
+    <!-- FORMULARIO A LA IZQUIERDA -->
+    <div class="col-md-8">
+        <form method="post" action="{% url 'capitulo2_resultado' %}">
+            {% csrf_token %}
+
+            <!-- Grupo: selección y parámetros -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    Parámetros del método
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        {{ form.comparar }}
+                        <label class="form-check-label" for="id_comparar">Comparar todos los métodos</label>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6" id="metodo-seleccion">
+                            <label for="id_metodo">Selecciona un método:</label>
+                            {{ form.metodo }}
+                        </div>
+                        <div class="col-md-6">
+                            <label>Dimensión del sistema:</label>
+                            {{ form.dimension }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            {{ form.tol.label_tag }}
+                            {{ form.tol }}
+                            <small class="form-text text-muted">Ej: <code>0.001</code> o <code>1e-3</code></small>
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.niter.label_tag }}
+                            {{ form.niter }}
+                        </div>
+                    </div>
+
+                    <div id="w-sor" style="display:none;" class="mb-3">
+                        <label class="form-label">Valores de <strong>w</strong> (solo para SOR o comparación):</label>
+                        <div class="row">
+                            <div class="col">{{ form.w1.label_tag }} {{ form.w1 }}</div>
+                            <div class="col">{{ form.w2.label_tag }} {{ form.w2 }}</div>
+                            <div class="col">{{ form.w3.label_tag }} {{ form.w3 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Matriz A -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    Matriz A
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for i in rango %}
+                            <div class="col">
+                                {% for j in rango %}
+                                    <input type="text" name="A{{i}}{{j}}" id="A{{i}}{{j}}" class="form-control mb-1 text-center" placeholder="A{{i}}{{j}}">
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vector b -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    Vector b
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for i in rango %}
+                            <div class="col">
+                                <input type="text" name="b{{i}}" id="b{{i}}" class="form-control text-center" placeholder="b{{i}}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vector x₀ -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    Vector x₀ (aproximación inicial)
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for i in rango %}
+                            <div class="col">
+                                <input type="text" name="x0{{i}}" id="x0{{i}}" class="form-control text-center" placeholder="x₀{{i}}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón calcular -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-success btn-lg px-4">Calcular</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- INSTRUCCIONES A LA DERECHA -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                Instrucciones para ingresar datos
+            </div>
+            <div class="card-body">
+                <ul style="font-size: 0.95em;">
+                    <li>Selecciona la <strong>dimensión</strong> del sistema (2x2 a 7x7).</li>
+                    <li>Llena completamente la matriz <strong>A</strong>, incluyendo ceros.</li>
+                    <li>El vector <strong>b</strong> y el vector <strong>x₀</strong> deben tener la misma longitud.</li>
+                    <li>Para la <strong>tolerancia</strong> (error):
+                        <ul>
+                            <li><code>0.001</code> es igual a 1<sup>-3</sup></li>
+                            <li><code>1e-3</code> es notación científica</li>
+                        </ul>
+                    </li>
+                    <li><strong>w</strong> es obligatorio solo para SOR.</li>
+                    <li>Al comparar métodos, también debes elegir cuál mostrar detalladamente.</li>
+                    <li>Se recomienda que la matriz A sea <strong>diagonalmente dominante</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Eventos JS -->
+<script>
+    document.getElementById("id_comparar").addEventListener("change", toggleComparacion);
+    document.getElementById("id_metodo").addEventListener("change", toggleSOR);
+    document.getElementById("id_dimension").addEventListener("change", actualizarFormulario);  // ← ESTA ES CLAVE
+</script>
+
+</body>
+</html>

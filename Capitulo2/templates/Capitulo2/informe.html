@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Informe Métodos Iterativos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+    <h2 class="text-center">Informe Comparativo de Métodos Iterativos</h2>
+
+    <table class="table table-bordered mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>Método</th>
+                <th>Iteraciones</th>
+                <th>Solución</th>
+                <th>Error Final</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in resumen %}
+                <tr>
+                    <td>{{ r.metodo }}</td>
+                    <td>{{ r.niter }}</td>
+                    <td>[{% for x in r.solucion %}{{ x|floatformat:6 }}{% if not forloop.last %}, {% endif %}{% endfor %}]</td>
+                    <td>{{ r.error|floatformat:6 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="alert alert-success">
+        <strong>Método más eficiente:</strong> {{ mejor }}
+    </div>
+
+    <a href="{% url 'capitulo2_formulario' %}" class="btn btn-secondary mt-3">Volver</a>
+</div>
+</body>
+</html>
