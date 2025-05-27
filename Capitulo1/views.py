@@ -162,15 +162,45 @@ def comparar_metodos(request):
             try:
                 resultado = metodo_func()
                 if "resultados" in resultado:
-                    iteraciones = len(resultado["resultados"])
-                    resultados[nombre] = iteraciones
-                    if iteraciones < min_iteraciones:
-                        min_iteraciones = iteraciones
+                    iteraciones = resultado["resultados"]
+                    n = len(iteraciones)
+                    ult = iteraciones[-1]
+                    xm = None
+                    error = None
+
+                    # Buscar nombre del campo que contiene la raíz estimada
+                    for clave in ["x", "x1", "x2", "c"]:
+                        if clave in ult:
+                            xm = ult[clave]
+                            break
+
+                    error = ult.get("error", "—")
+
+                    resultados[nombre] = {
+                        "iteraciones": n,
+                        "xm": xm,
+                        "error": error
+                    }
+
+                    if n < min_iteraciones:
+                        min_iteraciones = n
                         metodos_eficientes = [nombre]
-                    elif iteraciones == min_iteraciones:
+                    elif n == min_iteraciones:
                         metodos_eficientes.append(nombre)
+
+                else:
+                    resultados[nombre] = {
+                        "error": resultado.get("error", "Error desconocido"),
+                        "xm": "—",
+                        "iteraciones": "—"
+                    }
             except Exception as e:
-                resultados[nombre] = f"Error: {str(e)}"
+                resultados[nombre] = {
+                    "error": f"{str(e)}",
+                    "xm": "—",
+                    "iteraciones": "—"
+                }
+
 
         # Ordenar por eficiencia (menor a mayor)
         resultados_ordenados = dict(sorted(resultados.items(), key=lambda x: x[1] if isinstance(x[1], int) else float('inf')))

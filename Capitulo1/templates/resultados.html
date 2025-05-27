@@ -13,11 +13,26 @@
     <div class="alert alert-info">
         <h4>Método más eficiente: {{ mejor_metodo }}</h4>
         <h5>Iteraciones de cada método:</h5>
-        <ul>
-            {% for metodo, iteraciones in resultados_comparacion.items %}
-                <li><strong>{{ metodo }}:</strong> {{ iteraciones }}</li>
-            {% endfor %}
-        </ul>
+        <table class="table table-bordered mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Método</th>
+                    <th>Iteraciones</th>
+                    <th>Último Xm</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metodo, datos in resultados_comparacion.items %}
+                    <tr>
+                        <td>{{ metodo }}</td>
+                        <td>{{ datos.iteraciones }}</td>
+                        <td>{{ datos.xm }}</td>
+                        <td>{{ datos.error }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     {% endif %}
 
