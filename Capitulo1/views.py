@@ -83,31 +83,40 @@ def capitulo1_view(request):
             "metodo": metodo,
             "comparar": comparar,
         }
-
         try:
-            faltantes = verificar_datos(metodo, datos)
-            if faltantes:
-                resultado = {"error": f"Faltan los siguientes datos: {', '.join(faltantes)}"}
-            else:
-                if metodo == "biseccion":
-                    resultado = biseccion(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
-                elif metodo == "puntofijo":
-                    resultado = punto_fijo(datos["gx"], datos["x0"], datos["tol"], datos["niter"])
-                elif metodo == "reglafalsa":
-                    resultado = regla_falsa(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
-                elif metodo == "secante":
-                    resultado = secante(datos["fx"], datos["x0"], datos["x1"], datos["tol"], datos["niter"])
-                elif metodo == "newton":
-                    resultado = newton(datos["fx"], datos["dfx"], datos["x0"], datos["tol"], datos["niter"])
-                elif metodo == "multiples":
-                    ddfx = request.POST.get("ddfx")
-                    resultado = raices_multiples(datos["fx"], datos["dfx"], ddfx, datos["x0"], datos["tol"], datos["niter"])
+                faltantes = verificar_datos(metodo, datos)
+                if faltantes:
+                    resultado = {"error": f"Faltan los siguientes datos: {', '.join(faltantes)}"}
+                else:
+                    resultado = {}
+                    try:
+                        if metodo == "biseccion":
+                            resultado = biseccion(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
+                        elif metodo == "puntofijo":
+                            resultado = punto_fijo(datos["gx"], datos["x0"], datos["tol"], datos["niter"])
+                        elif metodo == "reglafalsa":
+                            resultado = regla_falsa(datos["fx"], datos["a"], datos["b"], datos["tol"], datos["niter"])
+                        elif metodo == "secante":
+                            resultado = secante(datos["fx"], datos["x0"], datos["x1"], datos["tol"], datos["niter"])
+                        elif metodo == "newton":
+                            resultado = newton(datos["fx"], datos["dfx"], datos["x0"], datos["tol"], datos["niter"])
+                        elif metodo == "multiples":
+                            ddfx = request.POST.get("ddfx")
+                            resultado = raices_multiples(datos["fx"], datos["dfx"], ddfx, datos["x0"], datos["tol"], datos["niter"])
+                    except Exception as e:
+                        resultado["error"] = f"Error durante el cálculo: {str(e)}"
 
+                    # Intentar generar gráfica incluso si hay error
+                    if datos.get("fx"):
+                        try:
+                            raiz_aprox = resultado.get("raiz", None)
+                            a = datos.get("a") if datos.get("a") is not None else -10
+                            b = datos.get("b") if datos.get("b") is not None else 10
+                            grafica = generar_grafica(datos["fx"], a, b, raiz_aprox)
+                        except Exception as e:
+                            grafica = None
+                            resultado["grafica_error"] = f"No se pudo generar la gráfica: {e}"
 
-                if datos.get("fx") and resultado and "raiz" in resultado:
-                    a = datos.get("a") if datos.get("a") is not None else -10
-                    b = datos.get("b") if datos.get("b") is not None else 10
-                    grafica = generar_grafica(datos["fx"], a, b, resultado["raiz"])
 
         except Exception as e:
             resultado = {"error": f"Error durante el cálculo: {str(e)}"}
