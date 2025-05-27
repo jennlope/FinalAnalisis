@@ -11,7 +11,7 @@
 
     {% if metodo_real %}
     <div class="alert alert-info mt-2">
-        <strong>Nota:</strong> El valor real se obtuvo mediante: <em>{{ metodo_real }}</em>.
+        <strong>Nota:</strong> El valor real fue <strong>ingresado manualmente</strong> por el usuario.
     </div>
     {% endif %}
 
@@ -28,6 +28,7 @@
         </div>
     </div>
     {% endif %}
+
     {% if splines_lineales %}
     <hr>
     <p><strong>Splines lineales:</strong></p>
@@ -46,7 +47,6 @@
         {% endfor %}
     </ul>
     {% endif %}
-
 
     {% if punto_eval %}
         <h5>Comparación de errores en x = {{ punto_eval }}:</h5>
@@ -76,13 +76,12 @@
         </div>
     {% endif %}
 
-   {% if mejores_metodos %}
+    {% if mejores_metodos %}
     <div class="alert alert-success mt-4">
         <strong>Mejor método{% if mejores_metodos|length > 1 %}s{% endif %} según el menor error:</strong>
         {{ mejores_metodos|join:", " }}
     </div>
     {% endif %}
-
 
     <div class="text-center mt-4">
         <a href="{% url 'interpolacion_formulario' %}" class="btn btn-secondary">Volver al formulario</a>

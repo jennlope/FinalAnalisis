@@ -56,6 +56,12 @@
                     <input type="number" name="punto_eval" step="any" class="form-control">
                 </div>
 
+                <div class="mb-3">
+                    <label for="y_real">Valor real en el punto evaluado <span class="text-danger">*</span>:</label>
+                    <input type="number" name="y_real" step="any" class="form-control" required>
+                </div>
+
+
                 <div class="form-check mb-3">
                     <input type="checkbox" name="generar_informe" class="form-check-input" id="informeCheck">
                     <label class="form-check-label" for="informeCheck">¿Generar informe comparativo?</label>
@@ -78,8 +84,9 @@
                         <li>Los valores de <strong>x deben ser únicos</strong>.</li>
                         <li>Los valores deben ser numéricos (enteros o decimales).</li>
                         <li>El campo “Punto a evaluar” es opcional.</li>
+                        <li>El campo “Valor real” es opcional, pero necesario para el informe.</li>
                         <li>Activa la opción de informe si deseas comparar todos los métodos.</li>
-                        <li>El informe calculará el error en el punto de evaluación (si está dentro del intervalo).</li>
+                        <li>Verifique que la funcion si sea continua en el intervalo.</li>
                     </ul>
                 </div>
             </div>
@@ -87,4 +94,4 @@
     </div>
 </div>
 </body>
-</html>
+</html
